@@ -1,3 +1,4 @@
+include(motor_driver.cmake)
 include(motor2040_led_rainbow.cmake)
 include(motor2040_motor_cluster.cmake)
 include(motor2040_motor_profiler.cmake)

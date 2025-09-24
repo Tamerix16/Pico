@@ -1,38 +1,33 @@
+
 #include <cstdio>
 #include "pico/stdlib.h"
-#include <string>
-#include "motor2040.hpp"
-#include "button.hpp"
 
-/*
-Demonstrates how to read the angles of Motor 2040's four encoders.
+    volatile char test[5];
+    int position = 0;
 
-Press "Boot" to exit the program.
-*/
-volatile char test[20] = "1";
-
-
-
-int main() {
-  stdio_init_all();
-
-  // Fill the array of motors, and initialise them. Up to 8 motors can be created
-
-
-  // Uncomment the below lines to reverse
-  // the counting direction of an encoder
-  // encoders[0].direction(REVERSED_DIR);
-  // encoders[1].direction(REVERSED_DIR);
-  // encoders[2].direction(REVERSED_DIR);
-  // encoders[3].direction(REVERSED_DIR);
-
-  // Read the encoders until the user button is pressed
-  while(true) {
-    // Print out the angle of each encoder
- 
-    scanf("%s", test)
-    printf("hi\n");
-
-    sleep_ms(100);
-  }
-}
+    int main() 
+    {
+        stdio_init_all();
+        // Your other initialization code
+        while (1) 
+        {
+            int c = getchar_timeout_us(0); // Check for a character immediately
+            if (c != PICO_ERROR_TIMEOUT) 
+            {
+            // Process the received character 'c'
+            if (c == '\n')
+                {
+                    char backup[]="test";
+                printf("Received: %s\n", backup);
+                position = 0;
+                }
+                else
+                {
+                    test[position] = c;
+                    position ++;
+                    printf("Received: %c\n", (char)c);
+                }
+            }
+        }
+        return 0;
+    }

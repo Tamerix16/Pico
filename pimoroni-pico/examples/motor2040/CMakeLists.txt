@@ -1,4 +1,5 @@
 include(motor_driver.cmake)
+#[[
 include(motor2040_led_rainbow.cmake)
 include(motor2040_motor_cluster.cmake)
 include(motor2040_motor_profiler.cmake)
@@ -16,3 +17,4 @@ include(motor2040_read_sensors.cmake)
 include(motor2040_single_motor.cmake)
 include(motor2040_velocity_control.cmake)
 include(motor2040_velocity_tuning.cmake)
+]]

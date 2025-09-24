@@ -1,3 +1,4 @@
+#[====[
 add_subdirectory(breakout_dotmatrix)
 add_subdirectory(breakout_encoder)
 add_subdirectory(breakout_encoder_wheel)
@@ -58,7 +59,7 @@ add_subdirectory(badger2040)
 add_subdirectory(tufty2040)
 add_subdirectory(interstate75)
 add_subdirectory(servo2040)
-add_subdirectory(motor2040)
+
 add_subdirectory(inventor2040w)
 add_subdirectory(encoder)
 add_subdirectory(galactic_unicorn)
@@ -66,3 +67,5 @@ add_subdirectory(gfx_pack)
 add_subdirectory(cosmic_unicorn)
 add_subdirectory(stellar_unicorn)
 add_subdirectory(pico_w_explorer)
+]====]
+add_subdirectory(motor2040)

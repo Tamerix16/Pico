@@ -30,34 +30,26 @@ int main()
         
         if (c!=PICO_ERROR_TIMEOUT)
         {
-            position = 0;
-        do
-        {
-            str[position] = (char)c;
-            position++;
-            READY = true;
-        }while((c = getchar_timeout_us(0))!='\n'&& c!= PICO_ERROR_TIMEOUT);
-        str[position] = '\0';
-        printf ("string %c",str[3]);
+                position = 0;
+            do
+            {
+                str[position] = (char)c;
+                position++;
+                READY = true;
+            }while((c = getchar_timeout_us(0))!='\n'&& c!= PICO_ERROR_TIMEOUT);
+            str[position] = '\0';
+            printf("%c",str[0]);
+            if(char(str[0])=='m')
+            {
+                drive_forward();
+            }
+            else
+            {
+                soft_stop();
+            }
+            
         }
            
-    
-        // Process the received character 'c'
-        /*
-        if (char(c)=='m')
-        {
-        drive_forward();
-        }
-        else if(char(c)=='s')
-        {
-            soft_stop();
-        }
-        else if(c==100)
-        {
-        printf("hi");
-        }
-        printf("%c\n", char(c));
-        */
     
         
     }

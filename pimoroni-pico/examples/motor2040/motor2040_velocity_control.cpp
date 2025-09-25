@@ -25,7 +25,7 @@ const pin_pair ENCODER_PINS = motor2040::ENCODER_A;
 constexpr float GEAR_RATIO = 50.0f;
 
 // The counts per revolution of the motor's output shaft
-constexpr float COUNTS_PER_REV = MMME_CPR * GEAR_RATIO;
+constexpr float COUNTS_PER_REV = 14.0f * GEAR_RATIO;
 
 // The direction to spin the motor in. NORMAL_DIR (0), REVERSED_DIR (1)
 const Direction DIRECTION = NORMAL_DIR;
@@ -51,7 +51,7 @@ constexpr float ACC_PRINT_SCALE = 0.05f;    // Acceleration multiplier
 constexpr float VELOCITY_EXTENT = 3.0f;
 
 // The interpolating mode between setpoints. STEP (0), LINEAR (1), COSINE (2)
-const uint INTERP_MODE = 2;
+const uint INTERP_MODE = 0;
 
 // PID values
 constexpr float VEL_KP = 30.0f;   // Velocity proportional (P) gain
@@ -88,7 +88,7 @@ int main() {
 
   // Set the initial value and create a random end value between the extents
   float start_value = 0.0f;
-  float end_value = (((float)rand() / (float)RAND_MAX) * (VELOCITY_EXTENT * 2.0f)) - VELOCITY_EXTENT;
+  float end_value = 3.0f ;
 
   // Continually move the motor until the user button is pressed
   while(!user_sw.raw()) {
@@ -141,7 +141,7 @@ int main() {
 
         // Set the start as the last end and create a new random end value
         start_value = end_value;
-        end_value = (((float)rand() / (float)RAND_MAX) * (VELOCITY_EXTENT * 2.0f)) - VELOCITY_EXTENT;
+        end_value = 3.0f;
     }
 
     sleep_ms(UPDATE_RATE * 1000.0f);

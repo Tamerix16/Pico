@@ -3,94 +3,74 @@
 #include "pico/stdlib.h"
 #include "motor2040.hpp"
 #include "pid.hpp"
+// motor_a = left
+//motor_b = right
+//motor_c = up/down
+//motor_d = gripping
 
 using namespace motor;
 using namespace encoder;
-const pin_pair MOTOR_PINS = motor2040::MOTOR_A;
-const pin_pair ENCODER_PINS = motor2040::ENCODER_A;
-constexpr float GEAR_RATIO = 50.0f;
-constexpr float COUNTS_PER_REV = 28.65f*GEAR_RATIO;
-const Direction DIRECTION = NORMAL_DIR;
-constexpr float SPEED_SCALE = 5.4f;
-const uint UPDATES = 100;
-constexpr float UPDATE_RATE = 1.0f/float(UPDATES);
-constexpr float VEL_KP =0.14f;   // Velocity proportional (P) gain
-constexpr float VEL_KI = 0.0f;    // Velocity integral (I) gain
-constexpr float VEL_KD = 0.002f;    // Velocity derivative (D) gain
+// SET MOTOR DRIVER PIN PAIRS
+const pin_pair MA_pins = motor2040::MOTOR_A;
+const pin_pair MB_pins = motor2040::MOTOR_B;
+const pin_pair MC_pins = motor2040::MOTOR_C;
+const pin_pair MD_pins = motor2040::MOTOR_D;
 
-Motor m = Motor(MOTOR_PINS, DIRECTION, SPEED_SCALE);
-Encoder enc = Encoder(pio0, 0, ENCODER_PINS, PIN_UNUSED, DIRECTION, COUNTS_PER_REV, true);
-PID vel_pid = PID(VEL_KP, VEL_KI, VEL_KD, UPDATE_RATE);
+// SET ENCODER PIN PAIRS
+const pin_pair EA_pins = motor2040::ENCODER_A;
+const pin_pair EB_pins = motor2040::ENCODER_B;
+const pin_pair EC_pins = motor2040::ENCODER_C;
+const pin_pair ED_pins = motor2040::ENCODER_D;
 
+//SET MOTOR GEAR RATIOS
+constexpr float GEAR_RATIO_A = 50.0f;
+constexpr float GEAR_RATIO_B = 50.0f;
+constexpr float GEAR_RATIO_C = 50.0f;
+constexpr float GEAR_RATIO_D = 50.0f;
 
-volatile int position = 0;
-volatile bool READY = false;
+//SET MOTOR DEFAULT DIRECTIONS
+const Direction DIRECTION_A = NORMAL_DIR;
+const Direction DIRECTION_B = NORMAL_DIR;
+const Direction DIRECTION_C = NORMAL_DIR;
+const Direction DIRECTION_D = NORMAL_DIR;
 
-void drive_forward()
-{
-    m.full_positive();
-}
-void soft_stop()
-{
-    m.coast();
-}
-int main() 
-{
-    stdio_init_all();
-    // Your other initialization code
-    m.init(); //initialise motor
-    m.enable();
-    enc.init();
-    float speed_m1 = 0;
-    int position = 0;
-    char str[100];
-    float turns = 0.0f;
+// SET SPEED SCALING TO MATCH REAL WORLD SPEED
+constexpr float SPEED_SCALE_A = 5.4f;
+constexpr float SPEED_SCALE_B = 5.4f;
+constexpr float SPEED_SCALE_C = 5.4f;
+constexpr float SPEED_SCALE_D = 5.4f;
 
-    while (1) 
-    {
-        vel_pid.setpoint = speed_m1;
-        Encoder::Capture capture = enc.capture();
-        int c = getchar_timeout_us(0); // Check for a character immediately
-        
-        if (c!=PICO_ERROR_TIMEOUT)
-        {
-                position = 0;
-                
-            do
-            {
-                str[position] = (char)c;
-                position++;
-                READY = true;
-            }while((c = getchar_timeout_us(0))!='\n'&& c!= PICO_ERROR_TIMEOUT);
-            str[position] = '\0';
-            if(str[0] == 'w')
-            {
-                speed_m1 = (float)(str[1]-'0');
-                vel_pid.setpoint = speed_m1;
-                printf("%f",speed_m1);
-            }
-            else if(str[0] == 's')
-            {
-                speed_m1=(float)(-1*(str[1]-'0'));
-                vel_pid.setpoint = speed_m1;
-                printf("%f",speed_m1);
-            }
+// SET PULSES PER REVOLUTION
+constexpr float PULSE_A = 28.65f;
+constexpr float PULSE_B = 28.65f;
+constexpr float PULSE_C = 28.65f;
+constexpr float PULSE_D = 28.65f;
 
-            
-        }
-        float speed_adjust = vel_pid.calculate(capture.revolutions_per_second());
-        m.speed(m.speed() + (speed_adjust * UPDATE_RATE));
-        printf("Vel = %f\n ", capture.revolutions_per_second());
-        printf("degrees %f\n", capture.degrees());
-        turns = capture.degrees()/360.0f;
-        if(turns>1)
-        {
-            speed_m1 = 0;
-        }
-           
-    
-        
-    }
-    return 0;
-}
+// SET PID VALUES FOR EACH POSITION PDI OBJECT
+constexpr float POS_KP_A = 0.025f;
+constexpr float POS_KI_A = 0.0f;
+constexpr float POS_KD_A = 0.0f;
 
+constexpr float POS_KP_B = 0.025f;
+constexpr float POS_KI_B = 0.0f;
+constexpr float POS_KD_B = 0.0f;
+
+constexpr float POS_KP_C = 0.025f;
+constexpr float POS_KI_C = 0.0f;
+constexpr float POS_KD_C = 0.0f
+
+constexpr float POS_KP_D = 0.025f;
+constexpr float POS_KI_D = 0.0f;
+constexpr float POS_KD_D = 0.0f;
+
+//CREATE MOTOR OBJECTS
+Motor m_a = MOTOR(MA_pins, DIRECTION_A, SPEED_SCALE_A);
+Motor m_b = MOTOR(MB_pins, DIRECTION_B, SPEED_SCALE_B);
+Motor m_c = MOTOR(MC_pins, DIRECTION_C, SPEED_SCALE_C);
+Motor m_d = MOTOR(MD_pins, DIRECTION_D, SPEED_SCALE_D);
+
+//CREATE ENCODER OBJECTS
+ENCODER enc_a = ENCODER(pio0, 0, EA_pins, PIN_UNUSED, DIRECTION_A, PULSE_A, true);
+ENCODER enc_b = ENCODER(pio0, 0, EB_pins, PIN_UNUSED, DIRECTION_B, PULSE_B, true);
+ENCODER enc_c = ENCODER(pio0, 0, EC_pins, PIN_UNUSED, DIRECTION_C, PULSE_C, true);
+ENCODER enc_d = ENCODER(pio0, 0, ED_pins, PIN_UNUSED, DIRECTION_D, PULSE_D, true);

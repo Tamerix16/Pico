@@ -17,7 +17,7 @@ using namespace encoder;
 constexpr float GEAR_RATIO = 50.0f;
 
 // The counts per revolution of the motor's output shaft
-constexpr float COUNTS_PER_REV = MMME_CPR * GEAR_RATIO;
+constexpr float COUNTS_PER_REV = 28.65f * GEAR_RATIO;
 
 
 // Create an array of encoder pointers

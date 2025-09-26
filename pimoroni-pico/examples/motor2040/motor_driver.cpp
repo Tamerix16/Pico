@@ -9,14 +9,14 @@ using namespace encoder;
 const pin_pair MOTOR_PINS = motor2040::MOTOR_A;
 const pin_pair ENCODER_PINS = motor2040::ENCODER_A;
 constexpr float GEAR_RATIO = 50.0f;
-constexpr float COUNTS_PER_REV = 14.0f*GEAR_RATIO;
+constexpr float COUNTS_PER_REV = 28.65f*GEAR_RATIO;
 const Direction DIRECTION = NORMAL_DIR;
 constexpr float SPEED_SCALE = 5.4f;
 const uint UPDATES = 100;
 constexpr float UPDATE_RATE = 1.0f/float(UPDATES);
-constexpr float VEL_KP = 30.0f;   // Velocity proportional (P) gain
+constexpr float VEL_KP =0.14f;   // Velocity proportional (P) gain
 constexpr float VEL_KI = 0.0f;    // Velocity integral (I) gain
-constexpr float VEL_KD = 0.4f;    // Velocity derivative (D) gain
+constexpr float VEL_KD = 0.002f;    // Velocity derivative (D) gain
 
 Motor m = Motor(MOTOR_PINS, DIRECTION, SPEED_SCALE);
 Encoder enc = Encoder(pio0, 0, ENCODER_PINS, PIN_UNUSED, DIRECTION, COUNTS_PER_REV, true);
@@ -44,6 +44,8 @@ int main()
     float speed_m1 = 0;
     int position = 0;
     char str[100];
+    float turns = 0.0f;
+
     while (1) 
     {
         vel_pid.setpoint = speed_m1;
@@ -79,6 +81,12 @@ int main()
         float speed_adjust = vel_pid.calculate(capture.revolutions_per_second());
         m.speed(m.speed() + (speed_adjust * UPDATE_RATE));
         printf("Vel = %f\n ", capture.revolutions_per_second());
+        printf("degrees %f\n", capture.degrees());
+        turns = capture.degrees()/360.0f;
+        if(turns>1)
+        {
+            speed_m1 = 0;
+        }
            
     
         

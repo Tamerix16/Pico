@@ -60,10 +60,10 @@ constexpr float VEL_KD = 0.4f;    // Velocity derivative (D) gain
 
 
 // Create a motor and set its direction and speed scale
-Motor m = Motor(MOTOR_PINS, DIRECTION, SPEED_SCALE);
+Motor m_a = Motor(MOTOR_PINS, DIRECTION, SPEED_SCALE);
 
 // Create an encoder and set its direction and counts per rev, using PIO 0 and State Machine 0
-Encoder enc = Encoder(pio0, 0, ENCODER_PINS, PIN_UNUSED, DIRECTION, COUNTS_PER_REV, true);
+Encoder enc_a = Encoder(pio0, 0, ENCODER_PINS, PIN_UNUSED, DIRECTION, COUNTS_PER_REV, true);
 
 // Create the user button
 Button user_sw(motor2040::USER_SW);
@@ -71,7 +71,7 @@ Button user_sw(motor2040::USER_SW);
 // Create PID object for velocity control
 PID vel_pid = PID(VEL_KP, VEL_KI, VEL_KD, UPDATE_RATE);
 
-
+void m_a_set_speed()
 int main() {
   stdio_init_all();
 

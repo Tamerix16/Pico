@@ -57,20 +57,124 @@ constexpr float POS_KD_B = 0.0f;
 
 constexpr float POS_KP_C = 0.025f;
 constexpr float POS_KI_C = 0.0f;
-constexpr float POS_KD_C = 0.0f
+constexpr float POS_KD_C = 0.0f;
 
 constexpr float POS_KP_D = 0.025f;
 constexpr float POS_KI_D = 0.0f;
 constexpr float POS_KD_D = 0.0f;
 
+// SET PID VALUES FOR EACH VELOCITY PID OBJECT
+constexpr float VEL_KP_A = 30.0f;
+constexpr float VEL_KI_A = 0.0f;
+constexpr float VEL_KD_A = 0.4f;
+
+constexpr float VEL_KP_B = 30.0f;
+constexpr float VEL_KI_B = 0.0f;
+constexpr float VEL_KD_B = 0.4f;
+
+constexpr float VEL_KP_C = 30.0f;
+constexpr float VEL_KI_C = 0.0f;
+constexpr float VEL_KD_C = 0.4f;
+
+constexpr float VEL_KP_D = 30.0f;
+constexpr float VEL_KI_D = 0.0f;
+constexpr float VEL_KD_D = 0.4f;
+
+//SET UPDATE RATE FOR PID
+const uint UPDATES = 100;
+constexpr float UPDATE_RATE = 1.0f / (float)UPDATES;
+
 //CREATE MOTOR OBJECTS
-Motor m_a = MOTOR(MA_pins, DIRECTION_A, SPEED_SCALE_A);
-Motor m_b = MOTOR(MB_pins, DIRECTION_B, SPEED_SCALE_B);
-Motor m_c = MOTOR(MC_pins, DIRECTION_C, SPEED_SCALE_C);
-Motor m_d = MOTOR(MD_pins, DIRECTION_D, SPEED_SCALE_D);
+Motor m_a = Motor(MA_pins, DIRECTION_A, SPEED_SCALE_A);
+Motor m_b = Motor(MB_pins, DIRECTION_B, SPEED_SCALE_B);
+Motor m_c = Motor(MC_pins, DIRECTION_C, SPEED_SCALE_C);
+Motor m_d = Motor(MD_pins, DIRECTION_D, SPEED_SCALE_D);
 
 //CREATE ENCODER OBJECTS
-ENCODER enc_a = ENCODER(pio0, 0, EA_pins, PIN_UNUSED, DIRECTION_A, PULSE_A, true);
-ENCODER enc_b = ENCODER(pio0, 0, EB_pins, PIN_UNUSED, DIRECTION_B, PULSE_B, true);
-ENCODER enc_c = ENCODER(pio0, 0, EC_pins, PIN_UNUSED, DIRECTION_C, PULSE_C, true);
-ENCODER enc_d = ENCODER(pio0, 0, ED_pins, PIN_UNUSED, DIRECTION_D, PULSE_D, true);
+Encoder enc_a = Encoder(pio0, 0, EA_pins, PIN_UNUSED, DIRECTION_A, PULSE_A, true);
+Encoder enc_b = Encoder(pio0, 0, EB_pins, PIN_UNUSED, DIRECTION_B, PULSE_B, true);
+Encoder enc_c = Encoder(pio0, 0, EC_pins, PIN_UNUSED, DIRECTION_C, PULSE_C, true);
+Encoder enc_d = Encoder(pio0, 0, ED_pins, PIN_UNUSED, DIRECTION_D, PULSE_D, true);
+
+//CREATE PID OBJECTS FOR VELOCITY
+PID vel_pid_a = PID(VEL_KP_A, VEL_KI_A, VEL_KD_A, UPDATE_RATE);
+PID vel_pid_b = PID(VEL_KP_B, VEL_KI_B, VEL_KD_B, UPDATE_RATE);
+PID vel_pid_c = PID(VEL_KP_C, VEL_KI_C, VEL_KD_C, UPDATE_RATE);
+PID vel_pid_d = PID(VEL_KP_D, VEL_KI_D, VEL_KD_D, UPDATE_RATE);
+
+//CREATE PID OBJECTS FOR POSITION
+PID pos_pid_a = PID(POS_KP_A, POS_KI_A, POS_KD_A, UPDATE_RATE);
+PID pos_pid_b = PID(POS_KP_B, POS_KI_B, POS_KD_B, UPDATE_RATE);
+PID pos_pid_c = PID(POS_KP_C, POS_KI_C, POS_KD_C, UPDATE_RATE);
+PID pos_pid_d = PID(POS_KP_D, POS_KI_D, POS_KD_D, UPDATE_RATE);
+
+char string[10]; // STRING TO STORE COMMUNICATION IN
+int c; // INT TO STORE CHARACTER IN PRIOR TO STRING CONVERSION
+void init()
+{
+    //initialise usb serial communication
+    stdio_init_all();
+    //initialise motors and encoders
+    m_a.init();
+    m_b.init();
+    m_c.init();
+    m_d.init();
+
+    enc_a.init();
+    enc_b.init();
+    enc_c.init();
+    enc_d.init();
+    
+    //enable motors
+    m_a.enable();
+    m_b.enable();
+    m_c.enable();
+    m_d.enable();
+
+}
+void interpret_serial(int character)
+{
+    int position = 0;
+                
+    do
+    {
+        string[position] = (char)character;
+        position++;
+        character = getchar_timeout_us(0);
+    }while(character!='\n'&& character!= PICO_ERROR_TIMEOUT);
+    string[position] = '\0';
+    
+
+}
+void motor_control(char motor)
+{
+    if(motor == 'a')
+    {
+
+        int test = 'd'-'c';
+        printf("%d",test);
+    }
+}
+int main()
+{
+    
+    init();
+    
+    
+
+    while (true)
+    {
+        c = getchar_timeout_us(0);
+        if (c!=PICO_ERROR_TIMEOUT)
+        {
+            interpret_serial(c);
+            if (string[0] == 'm')
+            {
+                printf("recieved\n");
+                motor_control(string[1]);
+            }
+        }
+        
+    }
+    return 0;
+}

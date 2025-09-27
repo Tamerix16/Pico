@@ -1,6 +1,5 @@
 include(motor_driver.cmake)
-include(motor2040_read_encoders.cmake)
-include(motor2040_position_control.cmake)
+
 #[[
 include(motor2040_led_rainbow.cmake)
 include(motor2040_motor_cluster.cmake)

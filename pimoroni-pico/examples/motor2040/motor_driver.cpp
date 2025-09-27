@@ -108,8 +108,10 @@ PID pos_pid_b = PID(POS_KP_B, POS_KI_B, POS_KD_B, UPDATE_RATE);
 PID pos_pid_c = PID(POS_KP_C, POS_KI_C, POS_KD_C, UPDATE_RATE);
 PID pos_pid_d = PID(POS_KP_D, POS_KI_D, POS_KD_D, UPDATE_RATE);
 
+//VARIABLES FOR USE THROUGHOUT MULTIPLE FUNCTIONS
 char string[10]; // STRING TO STORE COMMUNICATION IN
 int c; // INT TO STORE CHARACTER IN PRIOR TO STRING CONVERSION
+Motor* MOTORS[4] = {&m_a, &m_b, &m_c, &m_d};
 void init()
 {
     //initialise usb serial communication
@@ -132,7 +134,7 @@ void init()
     m_d.enable();
 
 }
-void interpret_serial(int character)
+void interpret_serial(int character) //TAKES THE CHARACTER INPUT FRO THE SERIAL INPUT AND CONVERTS TO A STRING
 {
     int position = 0;
                 
@@ -146,14 +148,10 @@ void interpret_serial(int character)
     
 
 }
-void motor_control(char motor)
+void motor_control(char selection)
 {
-    if(motor == 'a')
-    {
-
-        int test = 'd'-'c';
-        printf("%d",test);
-    }
+    Motor* motor = MOTORS[0];
+    motor->full_positive();
 }
 int main()
 {

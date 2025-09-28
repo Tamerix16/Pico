@@ -25,7 +25,7 @@ const pin_pair ENCODER_PINS = motor2040::ENCODER_A;
 constexpr float GEAR_RATIO = 50.0f;
 
 // The counts per revolution of the motor's output shaft
-constexpr float COUNTS_PER_REV = 14.0f * GEAR_RATIO;
+constexpr float COUNTS_PER_REV = 28.65 * GEAR_RATIO;
 
 // The direction to spin the motor in. NORMAL_DIR (0), REVERSED_DIR (1)
 const Direction DIRECTION = NORMAL_DIR;
@@ -60,10 +60,10 @@ constexpr float VEL_KD = 0.4f;    // Velocity derivative (D) gain
 
 
 // Create a motor and set its direction and speed scale
-Motor m_a = Motor(MOTOR_PINS, DIRECTION, SPEED_SCALE);
+Motor m = Motor(MOTOR_PINS, DIRECTION, SPEED_SCALE);
 
 // Create an encoder and set its direction and counts per rev, using PIO 0 and State Machine 0
-Encoder enc_a = Encoder(pio0, 0, ENCODER_PINS, PIN_UNUSED, DIRECTION, COUNTS_PER_REV, true);
+Encoder enc = Encoder(pio0, 0, ENCODER_PINS, PIN_UNUSED, DIRECTION, COUNTS_PER_REV, true);
 
 // Create the user button
 Button user_sw(motor2040::USER_SW);
@@ -71,7 +71,7 @@ Button user_sw(motor2040::USER_SW);
 // Create PID object for velocity control
 PID vel_pid = PID(VEL_KP, VEL_KI, VEL_KD, UPDATE_RATE);
 
-void m_a_set_speed()
+
 int main() {
   stdio_init_all();
 
@@ -83,12 +83,13 @@ int main() {
   m.enable();
 
 
+
   uint update = 0;
   uint print_count = 0;
 
   // Set the initial value and create a random end value between the extents
   float start_value = 0.0f;
-  float end_value = 3.0f ;
+  float end_value = 2.0f ;
 
   // Continually move the motor until the user button is pressed
   while(!user_sw.raw()) {
@@ -123,28 +124,28 @@ int main() {
     m.speed(m.speed() + (accel * UPDATE_RATE));
 
     // Print out the current motor values and their setpoints, but only on every multiple
-    if(print_count == 0) {
+    /*if(print_count == 0) {
         printf("Vel = %f, ", capture.revolutions_per_second());
         printf("Vel SP = %f, ", vel_pid.setpoint);
         printf("Accel = %f, ", accel * ACC_PRINT_SCALE);
         printf("Speed = %f\n", m.speed());
-    }
+    }*/
 
     // Increment the print count, and wrap it
-    print_count = (print_count + 1) % PRINT_DIVIDER;
+    //int_count = (print_count + 1) % PRINT_DIVIDER;
 
-    update++;   // Move along in time
+    //date++;   // Move along in time
 
     // Have we reached the end of this movement?
-    if(update >= UPDATES_PER_MOVE) {
-        update = 0;  // Reset the counter
+    //if(update >= UPDATES_PER_MOVE) {
+        //update = 0;  // Reset the counter
 
         // Set the start as the last end and create a new random end value
-        start_value = end_value;
-        end_value = 3.0f;
-    }
+        //start_value = end_value;
+        //end_value = 3.0f;
+    //}
 
-    sleep_ms(UPDATE_RATE * 1000.0f);
+    //sleep_ms(UPDATE_RATE * 1000.0f);
   }
 
   // Disable the motor

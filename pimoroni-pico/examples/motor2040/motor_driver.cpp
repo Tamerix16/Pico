@@ -48,11 +48,11 @@ constexpr float PULSE_C = 28.65f*GEAR_RATIO_C;
 constexpr float PULSE_D = 28.65f*GEAR_RATIO_D;
 
 // SET PID VALUES FOR EACH POSITION PDI OBJECT
-constexpr float POS_KP_A = 0.025f;
+constexpr float POS_KP_A = 0.14f;
 constexpr float POS_KI_A = 0.0f;
 constexpr float POS_KD_A = 0.0f;
 
-constexpr float POS_KP_B = 0.025f;
+constexpr float POS_KP_B = 0.14f;
 constexpr float POS_KI_B = 0.0f;
 constexpr float POS_KD_B = 0.0f;
 
@@ -60,7 +60,7 @@ constexpr float POS_KP_C = 0.14f;
 constexpr float POS_KI_C = 0.00f;
 constexpr float POS_KD_C = 0.0f;
 
-constexpr float POS_KP_D = 0.025f;
+constexpr float POS_KP_D = 0.14f;
 constexpr float POS_KI_D = 0.0f;
 constexpr float POS_KD_D = 0.0f;
 
@@ -119,6 +119,7 @@ PID* POS_PIDS[4] = {&pos_pid_a, &pos_pid_b, &pos_pid_c, &pos_pid_d};
 bool CONTROL_TYPE[4] = {0,0,0,0}; //TYPE OF CONTROL 0 = VEL, 1 =POS
 float POSITIONS[4] = {0,0,0,0,};
 bool SENT[4] ={0,0,0,0};
+char buffer[10] = {0,0,0,0,0,0,0,0,0,0};
 void init()
 {
     //initialise usb serial communication
@@ -158,7 +159,6 @@ void interpret_serial(int character) //TAKES THE CHARACTER INPUT FRO THE SERIAL 
 void motor_control()
 {
     int selection = string[1] -'a';
-    //Motor* motor = MOTORS[selection];
     if(!(string[2]-'0')) //velocity control
     {
         CONTROL_TYPE[selection] = 0;
@@ -200,8 +200,11 @@ void motor_adjust()
         if (!CONTROL_TYPE[i]) //check to see if velocity control
         {
             float speed_adjust = VEL_PIDS[i]->calculate(capture.revolutions_per_second());
-            MOTORS[i]->speed(MOTORS[i]->speed()+(speed_adjust*UPDATE_RATE));
+            float new_speed = MOTORS[i]->speed()+(speed_adjust*UPDATE_RATE);
+            MOTORS[i]->speed(new_speed);
+            sleep_ms(1); // DO NOT REMOVE: NEEDED TO ENSURE THAT MOTORS ADJUST TO THE CORRECT SPEED
         }
+        
         else
         {
             float pos_vel = POS_PIDS[i]->calculate(capture.degrees(), capture.degrees_per_second());
@@ -211,7 +214,6 @@ void motor_adjust()
                 printf("ready\n");
                 SENT[i] = 1;
             }
-            //printf("%f\n",capture.degrees());
         }
     }
 }

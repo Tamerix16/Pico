@@ -8,6 +8,7 @@
 //motor_c = up/down
 //motor_d = gripping
 
+
 using namespace motor;
 using namespace encoder;
 // SET MOTOR DRIVER PIN PAIRS
@@ -41,10 +42,10 @@ constexpr float SPEED_SCALE_C = 5.4f;
 constexpr float SPEED_SCALE_D = 5.4f;
 
 // SET PULSES PER REVOLUTION
-constexpr float PULSE_A = 28.65f;
-constexpr float PULSE_B = 28.65f;
-constexpr float PULSE_C = 28.65f;
-constexpr float PULSE_D = 28.65f;
+constexpr float PULSE_A = 28.65f*GEAR_RATIO_A;
+constexpr float PULSE_B = 28.65f*GEAR_RATIO_B;
+constexpr float PULSE_C = 28.65f*GEAR_RATIO_C;
+constexpr float PULSE_D = 28.65f*GEAR_RATIO_D;
 
 // SET PID VALUES FOR EACH POSITION PDI OBJECT
 constexpr float POS_KP_A = 0.025f;
@@ -55,8 +56,8 @@ constexpr float POS_KP_B = 0.025f;
 constexpr float POS_KI_B = 0.0f;
 constexpr float POS_KD_B = 0.0f;
 
-constexpr float POS_KP_C = 0.025f;
-constexpr float POS_KI_C = 0.0f;
+constexpr float POS_KP_C = 0.14f;
+constexpr float POS_KI_C = 0.00f;
 constexpr float POS_KD_C = 0.0f;
 
 constexpr float POS_KP_D = 0.025f;
@@ -92,9 +93,9 @@ Motor m_d = Motor(MD_pins, DIRECTION_D, SPEED_SCALE_D);
 
 //CREATE ENCODER OBJECTS
 Encoder enc_a = Encoder(pio0, 0, EA_pins, PIN_UNUSED, DIRECTION_A, PULSE_A, true);
-Encoder enc_b = Encoder(pio0, 0, EB_pins, PIN_UNUSED, DIRECTION_B, PULSE_B, true);
-Encoder enc_c = Encoder(pio0, 0, EC_pins, PIN_UNUSED, DIRECTION_C, PULSE_C, true);
-Encoder enc_d = Encoder(pio0, 0, ED_pins, PIN_UNUSED, DIRECTION_D, PULSE_D, true);
+Encoder enc_b = Encoder(pio0, 1, EB_pins, PIN_UNUSED, DIRECTION_B, PULSE_B, true);
+Encoder enc_c = Encoder(pio0, 2, EC_pins, PIN_UNUSED, DIRECTION_C, PULSE_C, true);
+Encoder enc_d = Encoder(pio0, 3, ED_pins, PIN_UNUSED, DIRECTION_D, PULSE_D, true);
 
 //CREATE PID OBJECTS FOR VELOCITY
 PID vel_pid_a = PID(VEL_KP_A, VEL_KI_A, VEL_KD_A, UPDATE_RATE);
@@ -112,6 +113,12 @@ PID pos_pid_d = PID(POS_KP_D, POS_KI_D, POS_KD_D, UPDATE_RATE);
 char string[10]; // STRING TO STORE COMMUNICATION IN
 int c; // INT TO STORE CHARACTER IN PRIOR TO STRING CONVERSION
 Motor* MOTORS[4] = {&m_a, &m_b, &m_c, &m_d};
+Encoder* ENCODERS[4] = {&enc_a, &enc_b, &enc_c, &enc_d};
+PID* VEL_PIDS[4] = {&vel_pid_a, &vel_pid_b, &vel_pid_c, &vel_pid_d};
+PID* POS_PIDS[4] = {&pos_pid_a, &pos_pid_b, &pos_pid_c, &pos_pid_d};
+bool CONTROL_TYPE[4] = {0,0,0,0}; //TYPE OF CONTROL 0 = VEL, 1 =POS
+float POSITIONS[4] = {0,0,0,0,};
+bool SENT[4] ={0,0,0,0};
 void init()
 {
     //initialise usb serial communication
@@ -121,7 +128,6 @@ void init()
     m_b.init();
     m_c.init();
     m_d.init();
-
     enc_a.init();
     enc_b.init();
     enc_c.init();
@@ -148,10 +154,66 @@ void interpret_serial(int character) //TAKES THE CHARACTER INPUT FRO THE SERIAL 
     
 
 }
-void motor_control(char selection)
+
+void motor_control()
 {
-    Motor* motor = MOTORS[0];
-    motor->full_positive();
+    int selection = string[1] -'a';
+    //Motor* motor = MOTORS[selection];
+    if(!(string[2]-'0')) //velocity control
+    {
+        CONTROL_TYPE[selection] = 0;
+        int speed_value_1 = string[3]-'0'; //1
+        int speed_value_2 = string[4]-'0'; //0.1
+        int speed_value_3 = string[5]-'0'; //0.01
+        float revs_per_second = (float)speed_value_1+((float)speed_value_2/10)+((float)speed_value_3/100);
+        if(!(string[6]-'0')) // check for direction
+        {
+            revs_per_second = revs_per_second*-1.0f;
+        }
+        VEL_PIDS[selection]->setpoint = revs_per_second;
+        
+    }
+    else //position control
+    {
+        CONTROL_TYPE[selection] = 1;
+        Encoder::Capture capture = ENCODERS[selection]->capture();
+        int pos_value_1 = string[3]-'0';//10
+        int pos_value_2 = string[4]-'0';//1
+        int pos_value_3 = string[5]-'0';//0.1
+        float revolutions = (float)pos_value_1*10.0f+(float)pos_value_2+(float)pos_value_3*0.01f;
+        
+        if(!(string[6]-'0')) // check for direction
+        {
+            revolutions = revolutions*-1.0f;
+        }
+        POSITIONS[selection]=capture.degrees()+ revolutions*360.0f;
+        POS_PIDS[selection]->setpoint = POSITIONS[selection];
+        SENT[selection] = 0;
+        
+    }
+}
+void motor_adjust()
+{
+    for(int i=0; i<4; i++)
+    {
+        Encoder::Capture capture = ENCODERS[i]->capture();
+        if (!CONTROL_TYPE[i]) //check to see if velocity control
+        {
+            float speed_adjust = VEL_PIDS[i]->calculate(capture.revolutions_per_second());
+            MOTORS[i]->speed(MOTORS[i]->speed()+(speed_adjust*UPDATE_RATE));
+        }
+        else
+        {
+            float pos_vel = POS_PIDS[i]->calculate(capture.degrees(), capture.degrees_per_second());
+            MOTORS[i]->speed(pos_vel);
+            if((pos_vel < 0.1 && pos_vel >-0.1)&& SENT[i] == 0)
+            {
+                printf("ready\n");
+                SENT[i] = 1;
+            }
+            //printf("%f\n",capture.degrees());
+        }
+    }
 }
 int main()
 {
@@ -169,10 +231,11 @@ int main()
             if (string[0] == 'm')
             {
                 printf("recieved\n");
-                motor_control(string[1]);
+                motor_control();
             }
+
         }
-        
+        motor_adjust();
     }
     return 0;
 }

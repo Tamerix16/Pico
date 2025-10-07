@@ -7,6 +7,9 @@
 //motor_b = right
 //motor_c = up/down
 //motor_d = gripping
+//shelf 1: 7
+//shelf2 :26
+//shelf 3
 
 
 using namespace motor;
@@ -24,10 +27,10 @@ const pin_pair EC_pins = motor2040::ENCODER_C;
 const pin_pair ED_pins = motor2040::ENCODER_D;
 
 //SET MOTOR GEAR RATIOS
-constexpr float GEAR_RATIO_A = 50.0f;
-constexpr float GEAR_RATIO_B = 50.0f;
-constexpr float GEAR_RATIO_C = 50.0f;
-constexpr float GEAR_RATIO_D = 50.0f;
+constexpr float GEAR_RATIO_A = 150.0f;
+constexpr float GEAR_RATIO_B = 150.0f;
+constexpr float GEAR_RATIO_C = 150.0f;
+constexpr float GEAR_RATIO_D = 150.0f;
 
 //SET MOTOR DEFAULT DIRECTIONS
 const Direction DIRECTION_A = NORMAL_DIR;
@@ -44,23 +47,23 @@ constexpr float SPEED_SCALE_D = 5.4f;
 // SET PULSES PER REVOLUTION
 constexpr float PULSE_A = 28.65f*GEAR_RATIO_A;
 constexpr float PULSE_B = 28.65f*GEAR_RATIO_B;
-constexpr float PULSE_C = 28.65f*GEAR_RATIO_C;
+constexpr float PULSE_C = 9.8f*GEAR_RATIO_C;
 constexpr float PULSE_D = 28.65f*GEAR_RATIO_D;
 
 // SET PID VALUES FOR EACH POSITION PDI OBJECT
-constexpr float POS_KP_A = 0.14f;
+constexpr float POS_KP_A = 10.0f;
 constexpr float POS_KI_A = 0.0f;
 constexpr float POS_KD_A = 0.0f;
 
-constexpr float POS_KP_B = 0.14f;
+constexpr float POS_KP_B = 10.0f;
 constexpr float POS_KI_B = 0.0f;
 constexpr float POS_KD_B = 0.0f;
 
-constexpr float POS_KP_C = 0.14f;
+constexpr float POS_KP_C = 10.0f;
 constexpr float POS_KI_C = 0.00f;
 constexpr float POS_KD_C = 0.0f;
 
-constexpr float POS_KP_D = 0.14f;
+constexpr float POS_KP_D = 10.0f;
 constexpr float POS_KI_D = 0.0f;
 constexpr float POS_KD_D = 0.0f;
 
@@ -116,10 +119,11 @@ Motor* MOTORS[4] = {&m_a, &m_b, &m_c, &m_d};
 Encoder* ENCODERS[4] = {&enc_a, &enc_b, &enc_c, &enc_d};
 PID* VEL_PIDS[4] = {&vel_pid_a, &vel_pid_b, &vel_pid_c, &vel_pid_d};
 PID* POS_PIDS[4] = {&pos_pid_a, &pos_pid_b, &pos_pid_c, &pos_pid_d};
-bool CONTROL_TYPE[4] = {0,0,0,0}; //TYPE OF CONTROL 0 = VEL, 1 =POS
+bool CONTROL_TYPE[4] = {1,1,1,1}; //TYPE OF CONTROL 0 = VEL, 1 =POS
 float POSITIONS[4] = {0,0,0,0,};
 bool SENT[4] ={0,0,0,0};
 char buffer[10] = {0,0,0,0,0,0,0,0,0,0};
+float heights[4] {0,1440,3780,7840};
 void init()
 {
     //initialise usb serial communication
@@ -139,9 +143,15 @@ void init()
     m_b.enable();
     m_c.enable();
     m_d.enable();
+    
+    //set for them to stay at origin until told otherwise
+    for (int i=0; i<4; i++)
+    {
+        POS_PIDS[i]->setpoint = 0;
+    }
 
 }
-void interpret_serial(int character) //TAKES THE CHARACTER INPUT FRO THE SERIAL INPUT AND CONVERTS TO A STRING
+void interpret_serial(int character) //TAKES THE CHARACTER INPUT FROM THE SERIAL INPUT AND CONVERTS TO A STRING
 {
     int position = 0;
                 
@@ -158,48 +168,63 @@ void interpret_serial(int character) //TAKES THE CHARACTER INPUT FRO THE SERIAL 
 
 void motor_control()
 {
-    int selection = string[1] -'a';
-    if(!(string[2]-'0')) //velocity control
+    if (string[1] == 's')
     {
-        CONTROL_TYPE[selection] = 0;
-        int speed_value_1 = string[3]-'0'; //1
-        int speed_value_2 = string[4]-'0'; //0.1
-        int speed_value_3 = string[5]-'0'; //0.01
-        float revs_per_second = (float)speed_value_1+((float)speed_value_2/10)+((float)speed_value_3/100);
-        if(!(string[6]-'0')) // check for direction
-        {
-            revs_per_second = revs_per_second*-1.0f;
-        }
-        VEL_PIDS[selection]->setpoint = revs_per_second;
-        
+        m_d.speed(0.0f);
     }
-    else //position control
+    else if (string[1] == 'm')
     {
-        CONTROL_TYPE[selection] = 1;
-        Encoder::Capture capture = ENCODERS[selection]->capture();
-        int pos_value_1 = string[3]-'0';//10
-        int pos_value_2 = string[4]-'0';//1
-        int pos_value_3 = string[5]-'0';//0.1
-        float revolutions = (float)pos_value_1*10.0f+(float)pos_value_2+(float)pos_value_3*0.01f;
-        
-        if(!(string[6]-'0')) // check for direction
+        m_d.full_positive();
+    }
+    else if (string[1] == 'o')
+    {
+        m_d.full_negative();
+    }
+    else
+    {
+        int selection = string[1] -'a';
+        if(!(string[2]-'0')) //velocity control
         {
-            revolutions = revolutions*-1.0f;
+            CONTROL_TYPE[selection] = 0;
+            int speed_value_1 = string[3]-'0'; //1
+            int speed_value_2 = string[4]-'0'; //0.1
+            int speed_value_3 = string[5]-'0'; //0.01
+            float revs_per_second = (float)speed_value_1+((float)speed_value_2/10)+((float)speed_value_3/100);
+            if(!(string[6]-'0')) // check for direction
+            {
+                revs_per_second = revs_per_second*-1.0f;
+            }
+            VEL_PIDS[selection]->setpoint = revs_per_second;
+            
         }
-        POSITIONS[selection]=capture.degrees()+ revolutions*360.0f;
-        POS_PIDS[selection]->setpoint = POSITIONS[selection];
-        SENT[selection] = 0;
-        
+        else //position control
+        {
+            CONTROL_TYPE[selection] = 1;
+            Encoder::Capture capture = ENCODERS[selection]->capture();
+            int pos_value_1 = string[3]-'0';//10
+            int pos_value_2 = string[4]-'0';//1
+            int pos_value_3 = string[5]-'0';//0.1
+            float revolutions = (float)pos_value_1*10.0f+(float)pos_value_2+(float)pos_value_3*0.1f;
+            
+            if(!(string[6]-'0')) // check for direction
+            {
+                revolutions = revolutions*-1.0f;
+            }
+            POSITIONS[selection]=capture.degrees()+ revolutions*360.0f;
+            POS_PIDS[selection]->setpoint = POSITIONS[selection];
+            SENT[selection] = 0;
+            
+        }
     }
 }
 void motor_adjust()
 {
-    for(int i=0; i<4; i++)
+    for(int i=0; i<3; i++)
     {
         Encoder::Capture capture = ENCODERS[i]->capture();
         if (!CONTROL_TYPE[i]) //check to see if velocity control
         {
-            float speed_adjust = VEL_PIDS[i]->calculate(capture.revolutions_per_second());
+            float speed_adjust = VEL_PIDS[i]->calculate((-1.0f*capture.revolutions_per_second()));
             float new_speed = MOTORS[i]->speed()+(speed_adjust*UPDATE_RATE);
             MOTORS[i]->speed(new_speed);
             sleep_ms(1); // DO NOT REMOVE: NEEDED TO ENSURE THAT MOTORS ADJUST TO THE CORRECT SPEED
@@ -208,14 +233,21 @@ void motor_adjust()
         else
         {
             float pos_vel = POS_PIDS[i]->calculate(capture.degrees(), capture.degrees_per_second());
-            MOTORS[i]->speed(pos_vel);
-            if((pos_vel < 0.1 && pos_vel >-0.1)&& SENT[i] == 0)
+               MOTORS[i]->speed(-pos_vel); 
+
+            if((pos_vel < 0.5 && pos_vel >-0.5)&& SENT[i] == 0)
             {
                 printf("ready\n");
                 SENT[i] = 1;
             }
+            
         }
     }
+}
+
+void lift_control()
+{
+    pos_pid_c.setpoint = heights[string[1]-'0'];
 }
 int main()
 {
@@ -235,9 +267,13 @@ int main()
                 printf("recieved\n");
                 motor_control();
             }
-
+            else if(string[0]=='l')
+            {
+                lift_control();
+            }
         }
         motor_adjust();
     }
     return 0;
 }
+

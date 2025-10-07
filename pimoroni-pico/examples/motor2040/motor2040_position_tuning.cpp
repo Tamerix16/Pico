@@ -24,10 +24,10 @@ const pin_pair MOTOR_PINS = motor2040::MOTOR_A;
 const pin_pair ENCODER_PINS = motor2040::ENCODER_A;
 
 // The gear ratio of the motor
-constexpr float GEAR_RATIO = 50.0f;
+constexpr float GEAR_RATIO = 150.0f;
 
 // The counts per revolution of the motor's output shaft
-constexpr float COUNTS_PER_REV = MMME_CPR * GEAR_RATIO;
+constexpr float COUNTS_PER_REV = 28.65 * GEAR_RATIO;
 
 // The direction to spin the motor in. NORMAL_DIR (0), REVERSED_DIR (1)
 const Direction DIRECTION = NORMAL_DIR;

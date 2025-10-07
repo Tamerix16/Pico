@@ -14,10 +14,10 @@ using namespace motor;
 using namespace encoder;
 
 // The gear ratio of the motor
-constexpr float GEAR_RATIO = 50.0f;
+constexpr float GEAR_RATIO = 150.0f;
 
 // The counts per revolution of the motor's output shaft
-constexpr float COUNTS_PER_REV = 28.65f * GEAR_RATIO;
+constexpr float COUNTS_PER_REV = 28.0f * GEAR_RATIO;
 
 
 // Create an array of encoder pointers

@@ -1,5 +1,6 @@
 include(motor_driver.cmake)
-include(motor2040_velocity_control.cmake)
+
+
 #[[
 include(motor2040_led_rainbow.cmake)
 include(motor2040_motor_cluster.cmake)
@@ -13,6 +14,7 @@ include(motor2040_position_on_velocity_tuning.cmake)
 include(motor2040_quad_position_wave.cmake)
 include(motor2040_quad_velocity_sequence.cmake)
 include(motor2040_reactive_encoder.cmake)
+include(motor2040_velocity_control.cmake)
 include(motor2040_read_encoders.cmake)
 include(motor2040_read_sensors.cmake)
 include(motor2040_single_motor.cmake)

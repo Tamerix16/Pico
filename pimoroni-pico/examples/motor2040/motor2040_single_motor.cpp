@@ -36,7 +36,7 @@ int main() {
   sleep_ms(2000);
 
   // Drive at full positive
-  m.full_positive();
+  
   sleep_ms(2000);
 
   // Stop moving

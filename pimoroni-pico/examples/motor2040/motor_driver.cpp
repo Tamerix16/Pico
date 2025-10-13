@@ -168,20 +168,7 @@ void interpret_serial(int character) //TAKES THE CHARACTER INPUT FROM THE SERIAL
 
 void motor_control()
 {
-    if (string[1] == 's')
-    {
-        m_d.speed(0.0f);
-    }
-    else if (string[1] == 'm')
-    {
-        m_d.full_positive();
-    }
-    else if (string[1] == 'o')
-    {
-        m_d.full_negative();
-    }
-    else
-    {
+
         int selection = string[1] -'a';
         if(!(string[2]-'0')) //velocity control
         {
@@ -216,10 +203,9 @@ void motor_control()
             
         }
     }
-}
 void motor_adjust()
 {
-    for(int i=0; i<3; i++)
+    for(int i=0; i<4; i++)
     {
         Encoder::Capture capture = ENCODERS[i]->capture();
         if (!CONTROL_TYPE[i]) //check to see if velocity control

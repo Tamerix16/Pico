@@ -124,6 +124,8 @@ float POSITIONS[4] = {0,0,0,0,};
 bool SENT[4] ={0,0,0,0};
 char buffer[10] = {0,0,0,0,0,0,0,0,0,0};
 float heights[4] {0,1440,3780,7840};
+bool closing = false;
+bool opening = false;
 void init()
 {
     //initialise usb serial communication
@@ -208,32 +210,71 @@ void motor_adjust()
     for(int i=0; i<4; i++)
     {
         Encoder::Capture capture = ENCODERS[i]->capture();
+        
         if (!CONTROL_TYPE[i]) //check to see if velocity control
         {
+            if (i==3)
+            {
+                printf("%f\n", capture.revolutions_per_second());
+                if (closing)
+                {
+
+                    if (capture.revolutions_per_second()<0.015f)
+                    {
+                        CONTROL_TYPE[3] = 1;
+                        POSITIONS[3] = capture.degrees();
+                        pos_pid_d.setpoint = POSITIONS[3];
+                        printf("closed\n");
+                    }
+                }
+            }
+            else
+            {
             float speed_adjust = VEL_PIDS[i]->calculate((-1.0f*capture.revolutions_per_second()));
             float new_speed = MOTORS[i]->speed()+(speed_adjust*UPDATE_RATE);
             MOTORS[i]->speed(new_speed);
             sleep_ms(1); // DO NOT REMOVE: NEEDED TO ENSURE THAT MOTORS ADJUST TO THE CORRECT SPEED
+            }
         }
         
         else
         {
             float pos_vel = POS_PIDS[i]->calculate(capture.degrees(), capture.degrees_per_second());
                MOTORS[i]->speed(-pos_vel); 
-
-            if((pos_vel < 0.5 && pos_vel >-0.5)&& SENT[i] == 0)
+            if (i == 2)
             {
-                printf("ready\n");
-                SENT[i] = 1;
+
+                if((pos_vel < 5 && pos_vel >-5)&& SENT[i] == 0)
+                {
+                    printf("ready\n");
+                    SENT[i] = 1;
+                }
             }
             
         }
     }
 }
-
+void grip_control()
+{
+    if (string[1] == 'o')
+    {
+        printf("hi");
+        CONTROL_TYPE[3] = 1;
+        pos_pid_d.setpoint = 0;
+        opening = true;
+    }
+    if (string[1] == 'c')
+    {
+        CONTROL_TYPE[3] = 0;
+        m_d.duty(-0.5f);
+        closing = true;
+        sleep_ms(150);
+    }
+}
 void lift_control()
 {
     pos_pid_c.setpoint = heights[string[1]-'0'];
+    SENT[2] = 0;
 }
 int main()
 {
@@ -257,8 +298,15 @@ int main()
             {
                 lift_control();
             }
+            else if (string[0] == 'g')
+            {
+                printf("hi");
+                grip_control();
+
+            }
         }
         motor_adjust();
+
     }
     return 0;
 }

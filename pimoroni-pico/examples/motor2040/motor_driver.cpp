@@ -123,7 +123,7 @@ bool CONTROL_TYPE[4] = {1,1,1,1}; //TYPE OF CONTROL 0 = VEL, 1 =POS
 float POSITIONS[4] = {0,0,0,0,};
 bool SENT[4] ={0,0,0,0};
 char buffer[10] = {0,0,0,0,0,0,0,0,0,0};
-float heights[6] {0,828,2800,7840, 0, 1.3};
+float heights[6] {0,800,3120,8200, 0, 390};
 bool closing = false;
 bool opening = false;
 void init()

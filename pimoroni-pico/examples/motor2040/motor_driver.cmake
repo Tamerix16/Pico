@@ -4,7 +4,6 @@ add_executable(${OUTPUT_NAME} motor_driver.cpp)
 target_link_libraries(${OUTPUT_NAME}
         pico_stdlib
         motor2040
-        button
         pid
         )
 
